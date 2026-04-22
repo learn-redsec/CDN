@@ -56,6 +56,7 @@
     <h1>CDN File Browser</h1>
     <p>Browse available CDN files and download them directly.</p>
     <p class="muted">Update the <code>cdnFiles</code> array in this file to match your real CDN paths.</p>
+    <p class="muted">Cross-origin downloads require correct CDN CORS and content-disposition headers; otherwise files may open in-browser.</p>
     <div id="tree"></div>
   </main>
 
@@ -68,7 +69,7 @@
       { path: "videos/intro.mp4", url: `${CDN_BASE}/videos/intro.mp4` }
     ];
 
-    function safeDownloadName(name) {
+    function sanitizeDownloadFileName(name) {
       const baseName = (name || "").split("/").pop() || "download";
       return baseName.replace(/[^\w.-]+/g, "_");
     }
@@ -127,7 +128,7 @@
           const downloadLink = document.createElement("a");
           downloadLink.className = "download";
           downloadLink.href = file.url;
-          downloadLink.setAttribute("download", safeDownloadName(file.name));
+          downloadLink.setAttribute("download", sanitizeDownloadFileName(file.name));
           downloadLink.rel = "noopener noreferrer";
           downloadLink.textContent = "Download";
 
