@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CDN File Browser</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f8fa;
+      color: #24292f;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    h1 { margin-top: 0; font-size: 1.6rem; }
+    p { margin: 0.5rem 0 1rem; }
+    ul { list-style: none; padding-left: 1.2rem; margin: 0; }
+    li { margin: 0.35rem 0; }
+    .folder > .label { font-weight: 600; }
+    .file {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .download {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid #0969da;
+      border-radius: 4px;
+      text-decoration: none;
+      color: #0969da;
+      font-size: 0.9rem;
+    }
+    .download:hover { background: #ddf4ff; }
+    .muted { color: #57606a; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CDN File Browser</h1>
+    <p>Browse available CDN files and download them directly.</p>
+    <p class="muted">Update the <code>cdnFiles</code> array in this file to match your real CDN paths.</p>
+    <div id="tree" aria-live="polite"></div>
+  </main>
+
+  <script>
+    const cdnFiles = [
+      { path: "images/logo.png", url: "https://via.placeholder.com/400x120.png?text=CDN+Logo" },
+      { path: "docs/guide.pdf", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { path: "videos/intro.mp4", url: "https://www.w3schools.com/html/mov_bbb.mp4" }
+    ];
+
+    function createTree(files) {
+      const root = {};
+
+      for (const file of files) {
+        const parts = file.path.split("/");
+        let node = root;
+
+        parts.forEach((part, index) => {
+          const isFile = index === parts.length - 1;
+          if (!node[part]) {
+            node[part] = isFile ? { __file: file } : {};
+          }
+          node = node[part];
+        });
+      }
+
+      return root;
+    }
+
+    function renderNode(node) {
+      const ul = document.createElement("ul");
+
+      Object.entries(node)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([name, value]) => {
+          const li = document.createElement("li");
+
+          if (value.__file) {
+            const fileRow = document.createElement("div");
+            fileRow.className = "file";
+
+            const fileName = document.createElement("span");
+            fileName.textContent = `📄 ${name}`;
+
+            const downloadLink = document.createElement("a");
+            downloadLink.className = "download";
+            downloadLink.href = value.__file.url;
+            downloadLink.setAttribute("download", "");
+            downloadLink.textContent = "Download";
+
+            const openLink = document.createElement("a");
+            openLink.href = value.__file.url;
+            openLink.target = "_blank";
+            openLink.rel = "noopener noreferrer";
+            openLink.textContent = "Open";
+
+            fileRow.appendChild(fileName);
+            fileRow.appendChild(downloadLink);
+            fileRow.appendChild(openLink);
+            li.appendChild(fileRow);
+          } else {
+            li.className = "folder";
+            const label = document.createElement("div");
+            label.className = "label";
+            label.textContent = `📁 ${name}`;
+            li.appendChild(label);
+            li.appendChild(renderNode(value));
+          }
+
+          ul.appendChild(li);
+        });
+
+      return ul;
+    }
+
+    const treeElement = document.getElementById("tree");
+    treeElement.appendChild(renderNode(createTree(cdnFiles)));
+  </script>
+</body>
+</html>
