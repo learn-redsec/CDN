@@ -67,77 +67,74 @@
     ];
 
     function createTree(files) {
-      const root = { __children: {} };
+      const root = { folders: {}, files: [] };
 
       for (const file of files) {
         const parts = file.path.split("/");
-        let node = root.__children;
+        let folder = root;
 
-        parts.forEach((part, index) => {
-          const isFile = index === parts.length - 1;
-          const existing = node[part];
-
-          if (!existing) {
-            node[part] = isFile ? { __file: file, __children: {} } : { __children: {} };
-          } else if (isFile) {
-            existing.__file = file;
+        for (let i = 0; i < parts.length - 1; i += 1) {
+          const segment = parts[i];
+          if (!folder.folders[segment]) {
+            folder.folders[segment] = { folders: {}, files: [] };
           }
+          folder = folder.folders[segment];
+        }
 
-          node = node[part].__children;
+        folder.files.push({
+          name: parts[parts.length - 1],
+          url: file.url
         });
       }
 
-      return root.__children;
+      return root;
     }
 
-    function renderNode(node) {
+    function renderNode(treeNode) {
       const ul = document.createElement("ul");
 
-      Object.entries(node)
+      Object.entries(treeNode.folders)
         .sort(([a], [b]) => a.localeCompare(b))
-        .forEach(([name, value]) => {
+        .forEach(([folderName, folderNode]) => {
           const li = document.createElement("li");
-          const children = value.__children || {};
-          const hasChildren = Object.keys(children).length > 0;
+          li.className = "folder";
+          const label = document.createElement("div");
+          label.className = "label";
+          label.textContent = `📁 ${folderName}`;
+          li.appendChild(label);
+          li.appendChild(renderNode(folderNode));
+          ul.appendChild(li);
+        });
 
-          if (value.__file) {
-            const fileRow = document.createElement("div");
-            fileRow.className = "file";
+      treeNode.files
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((file) => {
+          const li = document.createElement("li");
+          const fileRow = document.createElement("div");
+          fileRow.className = "file";
 
-            const fileName = document.createElement("span");
-            fileName.textContent = `📄 ${name}`;
+          const fileName = document.createElement("span");
+          fileName.textContent = `📄 ${file.name}`;
 
-            const downloadLink = document.createElement("a");
-            downloadLink.className = "download";
-            downloadLink.href = value.__file.url;
-            downloadLink.setAttribute("download", name);
-            downloadLink.textContent = "Download";
+          const downloadLink = document.createElement("a");
+          downloadLink.className = "download";
+          downloadLink.href = file.url;
+          downloadLink.setAttribute("download", file.name);
+          downloadLink.rel = "noopener noreferrer";
+          downloadLink.textContent = "Download";
 
-            const openLink = document.createElement("a");
-            openLink.className = "open-link";
-            openLink.href = value.__file.url;
-            openLink.target = "_blank";
-            openLink.rel = "noopener noreferrer";
-            openLink.textContent = "Open";
+          const openLink = document.createElement("a");
+          openLink.className = "open-link";
+          openLink.href = file.url;
+          openLink.target = "_blank";
+          openLink.rel = "noopener noreferrer";
+          openLink.textContent = "Open";
 
-            fileRow.appendChild(fileName);
-            fileRow.appendChild(downloadLink);
-            fileRow.appendChild(openLink);
-            li.appendChild(fileRow);
-          }
-
-          if (!value.__file && hasChildren) {
-            li.className = "folder";
-            const label = document.createElement("div");
-            label.className = "label";
-            label.textContent = `📁 ${name}`;
-            li.appendChild(label);
-          }
-
-          if (hasChildren) {
-            li.appendChild(renderNode(children));
-          }
-
+          fileRow.appendChild(fileName);
+          fileRow.appendChild(downloadLink);
+          fileRow.appendChild(openLink);
+          li.appendChild(fileRow);
           ul.appendChild(li);
         });
 
