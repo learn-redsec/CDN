@@ -56,7 +56,7 @@
     <h1>CDN File Browser</h1>
     <p>Browse available CDN files and download them directly.</p>
     <p class="muted">Update the <code>cdnFiles</code> array in this file to match your real CDN paths.</p>
-    <div id="tree" aria-live="polite"></div>
+    <div id="tree"></div>
   </main>
 
   <script>
@@ -67,22 +67,27 @@
     ];
 
     function createTree(files) {
-      const root = {};
+      const root = { __children: {} };
 
       for (const file of files) {
         const parts = file.path.split("/");
-        let node = root;
+        let node = root.__children;
 
         parts.forEach((part, index) => {
           const isFile = index === parts.length - 1;
-          if (!node[part]) {
-            node[part] = isFile ? { __file: file } : {};
+          const existing = node[part];
+
+          if (!existing) {
+            node[part] = isFile ? { __file: file, __children: {} } : { __children: {} };
+          } else if (isFile) {
+            existing.__file = file;
           }
-          node = node[part];
+
+          node = node[part].__children;
         });
       }
 
-      return root;
+      return root.__children;
     }
 
     function renderNode(node) {
@@ -92,6 +97,8 @@
         .sort(([a], [b]) => a.localeCompare(b))
         .forEach(([name, value]) => {
           const li = document.createElement("li");
+          const children = value.__children || {};
+          const hasChildren = Object.keys(children).length > 0;
 
           if (value.__file) {
             const fileRow = document.createElement("div");
@@ -117,13 +124,18 @@
             fileRow.appendChild(downloadLink);
             fileRow.appendChild(openLink);
             li.appendChild(fileRow);
-          } else {
+          }
+
+          if (!value.__file && hasChildren) {
             li.className = "folder";
             const label = document.createElement("div");
             label.className = "label";
             label.textContent = `📁 ${name}`;
             li.appendChild(label);
-            li.appendChild(renderNode(value));
+          }
+
+          if (hasChildren) {
+            li.appendChild(renderNode(children));
           }
 
           ul.appendChild(li);
