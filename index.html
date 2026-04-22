@@ -60,6 +60,7 @@
   </main>
 
   <script>
+    // Replace with your actual CDN origin.
     const CDN_BASE = "https://your-cdn-domain.com";
     const cdnFiles = [
       { path: "images/logo.png", url: `${CDN_BASE}/images/logo.png` },
@@ -69,7 +70,7 @@
 
     function safeDownloadName(name) {
       const baseName = (name || "").split("/").pop() || "download";
-      return baseName.replace(/[^\w.\-]+/g, "_");
+      return baseName.replace(/[^\w.-]+/g, "_");
     }
 
     function createTree(files) {
