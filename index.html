@@ -71,7 +71,12 @@
 
     function sanitizeDownloadFileName(name) {
       const baseName = (name || "").split("/").pop() || "download";
-      return baseName.replace(/[^\w.-]+/g, "_");
+      const sanitized = baseName
+        .replace(/[^\w.-]+/g, "_")
+        .replace(/^\.+/, "")
+        .replace(/\.\.+/g, ".")
+        .replace(/^-+/, "");
+      return sanitized || "download";
     }
 
     function createTree(files) {
@@ -81,7 +86,7 @@
         const parts = file.path.split("/");
         let folder = root;
 
-        for (let i = 0; i < parts.length - 1; i += 1) {
+        for (let i = 0; i < parts.length - 1; i++) {
           const segment = parts[i];
           if (!folder.folders[segment]) {
             folder.folders[segment] = { folders: {}, files: [] };
