@@ -41,7 +41,13 @@
       color: #0969da;
       font-size: 0.9rem;
     }
+    .open-link {
+      color: #0969da;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
     .download:hover { background: #ddf4ff; }
+    .open-link:hover { text-decoration: underline; }
     .muted { color: #57606a; font-size: 0.9rem; }
   </style>
 </head>
@@ -97,10 +103,11 @@
             const downloadLink = document.createElement("a");
             downloadLink.className = "download";
             downloadLink.href = value.__file.url;
-            downloadLink.setAttribute("download", "");
+            downloadLink.setAttribute("download", name);
             downloadLink.textContent = "Download";
 
             const openLink = document.createElement("a");
+            openLink.className = "open-link";
             openLink.href = value.__file.url;
             openLink.target = "_blank";
             openLink.rel = "noopener noreferrer";
